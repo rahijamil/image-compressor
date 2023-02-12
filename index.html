@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image Compressor - MacroSass</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="pb-16">
+    <h1 class="text-center text-3xl font-bold py-8">
+      Image Compressor by
+      <a
+        target="_blank"
+        href="https://www.macrosaas.com/"
+        class="text-[#2524D1] hover:underline active:text-[#D7DFDC]"
+        >MacroSass</a
+      >
+    </h1>
+
+    <div
+      class="w-11/12 max-w-md mx-auto border hover:bg-[#D7DFDC] border-[#2524D1] active:border-2"
+    >
+      <input
+        type="file"
+        name="image"
+        id="image"
+        class="w-full"
+        onchange="handleChangeFile(event, document.getElementById('image-type').value, document.getElementById('image-quality').value)"
+        accept="image/jpg, image/png, image/jpeg"
+      />
+    </div>
+
+    <div class="w-11/12 max-w-md mx-auto mt-8 grid grid-cols-1 gap-4">
+      <select
+        name="image-type"
+        id="image-type"
+        onchange="handleType()"
+        class="w-full border hover:bg-[#D7DFDC] border-[#2524D1] hidden active:border-2"
+      >
+        <option value="image/png">PNG</option>
+        <option value="image/jpg">JPG</option>
+        <option value="image/webp" selected>WEBP</option>
+      </select>
+
+      <div class="flex gap-2" id="range_wrapper">
+        <input
+          type="range"
+          name="image-quality"
+          id="image-quality"
+          min="0"
+          max="100"
+          class="w-full border hover:bg-[#D7DFDC] border-[#2524D1] active:border-2"
+          value="75"
+          onchange="handleQuality()"
+        />
+
+        <div class="whitespace-nowrap">
+          <span id="qualityValue">75</span>
+          <span> / 100</span>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="w-11/12 max-w-7xl mx-auto my-8 grid grid-cols-2 border border-[#2524D1]"
+    >
+      <div class="border-r border-[#2524D1]">
+        <h2 class="font-bold text-xl border-b border-[#2524D1] p-4">
+          Original Image
+        </h2>
+        <img id="original-img" class="my-8" />
+
+        <div class="p-4 border-t border-[#2524D1]">
+          <div>
+            <span>Size: </span>
+            <span id="original-img-size" class="text-[#2524D1]"></span>
+          </div>
+          <div>
+            <span>Type: </span>
+            <span id="original-img-type" class="text-[#2524D1]"></span>
+          </div>
+        </div>
+      </div>
+      <div class="">
+        <h2 class="font-bold text-xl border-b border-[#2524D1] p-4">
+          Compressed Image
+        </h2>
+        <img id="compressed-img" class="my-8" />
+
+        <div class="p-4 border-t border-[#2524D1]">
+          <div>
+            <span>Size: </span>
+            <span id="compressed-img-size" class="text-[#2524D1]"></span>
+          </div>
+          <div>
+            <span>Type: </span>
+            <span id="compressed-img-type" class="text-[#2524D1]"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const fileInput = document.querySelector("#image"),
+        img = document.createElement("img");
+
+      let uploadedFile;
+
+      const handleUploadFile = (file, type, quality) => {
+        document.querySelector("#qualityValue").textContent =
+          document.getElementById("image-quality").value;
+
+        document.querySelector("#original-img-size").textContent = `${
+          Number(file.size) / 1000
+        } KB`;
+        document.querySelector("#original-img-type").textContent = file.type;
+
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        img.src = URL.createObjectURL(file);
+
+        img.addEventListener("load", (ev) => {
+          canvas.width = img.width * 0.5;
+          canvas.height = img.height * 0.5;
+          context.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const dataURL = canvas.toDataURL(type, quality / 100);
+          const byteString = atob(dataURL.split(",")[1]);
+          const mimeString = dataURL.split(",")[0].split(":")[1].split(";")[0];
+          const ab = new ArrayBuffer(byteString.length);
+          const ia = new Uint8Array(ab);
+          for (let i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+          }
+          const blob = new Blob([ab], { type: mimeString });
+          document.querySelector("#original-img").src =
+            URL.createObjectURL(uploadedFile);
+          document.querySelector("#compressed-img").src =
+            URL.createObjectURL(blob);
+
+          document.querySelector("#compressed-img-size").textContent = `${
+            Number(blob.size) / 1000
+          } KB`;
+          document.querySelector("#compressed-img-type").textContent =
+            blob.type;
+        });
+      };
+
+      const handleChangeFile = (e, type, quality) => {
+        uploadedFile = e.target.files[0];
+        handleUploadFile(uploadedFile, type, quality);
+      };
+
+      const handleQuality = () => {
+        if (uploadedFile) {
+          handleUploadFile(
+            uploadedFile,
+            document.getElementById("image-type").value,
+            document.getElementById("image-quality").value
+          );
+        }
+
+        document.getElementById("qualityValue").innerHTML =
+          document.getElementById("image-quality").value;
+      };
+
+      const handleType = () => {
+        if (uploadedFile) {
+          handleUploadFile(
+            uploadedFile,
+            document.getElementById("image-type").value,
+            document.getElementById("image-quality").value
+          );
+        }
+      };
+    </script>
+  </body>
+</html>
